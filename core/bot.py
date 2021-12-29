@@ -1,12 +1,11 @@
-__version__ = '0.7.0'
+__version__ = '0.0.0'
 
 # Standard libraries
 import os
-
-# Third party libraries
 from pathlib import Path
 from typing import Optional, Dict, Any
 
+# Third party libraries
 import aiohttp
 from nextcord import (
     __version__ as dpy_v,
@@ -24,6 +23,7 @@ from utils.json import read_json, json_unset, write_json
 from utils.mongo import Document
 from utils import logging
 # from .views import add_views
+
 load_dotenv()
 ROOT_DIR = str(Path(__file__).parents[1])
 logger = logging.get_logger(__name__)
@@ -50,21 +50,20 @@ class BaseMainBot(Bot):
         )
         # Defining a few things
         self.guild: Optional[Guild] = None
-        self.test: bool = False
+        self.test: bool = False  # True: will disable few events trigger, for easier testing
         # Webhook session
         self.session = aiohttp.ClientSession(trust_env=True)
         self.log_webhook = Webhook.from_url(os.getenv("logging"), session=self.session)
 
-        # self.__mongo = motor.motor_asyncio.AsyncIOMotorClient(str(os.getenv("mongo")))
-        self._flame_mongo = motor.motor_asyncio.AsyncIOMotorClient(os.getenv("flame_mongo"))
+        self.__mongo = motor.motor_asyncio.AsyncIOMotorClient(str(os.getenv("mongo")))
         self._mongo_setup()
         self._init_json()
 
     def _mongo_setup(self):
         """MongoDB setup"""
-        self.aibot_flame = self._flame_mongo["aibot"]  # "aibot"
+        self.db = self.__mongo["database"]  # Type your database name here
 
-        self.test = Document(self.aibot_flame, "test")
+        self.collection = Document(self.db, "collection")  # Type your collection name here
         logger.info("Initialized Database")
 
     def _init_json(self):

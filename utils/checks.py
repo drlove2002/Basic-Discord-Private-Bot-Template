@@ -7,7 +7,7 @@ admin (Administrator). Having these signify certain bypasses.
 Of course, the owner will always be able to execute commands."""
 from typing import Union, Optional, List
 
-from nextcord import DMChannel, DiscordException, Message, TextChannel, Member
+from nextcord import DMChannel, DiscordException, Message, TextChannel
 from nextcord.ext.commands import Context, check
 
 from core.constants import COMMAND_CHANNELS, ROLE
@@ -96,12 +96,6 @@ async def staff_perms(ctx: Context, allowed_list: List[int]) -> bool:
         except DiscordException:
             pass
     return False
-
-
-# noinspection PyProtectedMember
-def is_donor(member: Member) -> bool:
-    donor_roles = [805206231278419980, 823187151717138442, 823187155991134258, 805206230721232926]
-    return any(_id in member._roles for _id in donor_roles)
 
 
 async def is_staff(ctx: Context) -> bool:

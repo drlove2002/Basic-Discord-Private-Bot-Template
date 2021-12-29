@@ -9,10 +9,6 @@ from nextcord.ext.commands import (
 from nextcord import Member
 
 from core.bot import MainBot
-from core.constants import GangRole
-from core.error import GangError
-from utils.checks import is_staff
-from utils.modules import dump_cache
 from utils.util import Raise
 
 
@@ -26,13 +22,7 @@ class Events(Cog):
 
     @Cog.listener()
     async def on_member_remove(self, member: Member):
-        await self._bot.weekly.delete(member.id)
-        profile = self._bot.get_profile(member.id)
-        if profile is None:
-            return
-        if profile.role is GangRole.L:
-            await profile.gang.delete()
-        await profile.delete()
+        pass
 
     @Cog.listener()
     async def on_command_error(self, ctx: Context, error):
@@ -41,7 +31,7 @@ class Events(Cog):
             await Raise(ctx, f"I am missing: `{missing_perms}` to run this command").info()
         if isinstance(error, CommandNotFound):  # Ignore these errors
             return
-        elif isinstance(error, (UserInputError, BadArgument, MissingRequiredArgument, GangError, MemberNotFound)):
+        elif isinstance(error, (UserInputError, BadArgument, MissingRequiredArgument, MemberNotFound)):
             await Raise(ctx, str(error)).info()
         elif isinstance(error, NSFWChannelRequired):
             await ctx.reply("This is not a NSFW channel!")
@@ -74,18 +64,12 @@ class Events(Cog):
 
     @Cog.listener()
     async def on_message(self, message):
-        if message.author.bot or not message.guild:
+        if message.author.bot:
             return
 
         # Whenever the bot is tagged, respond with its prefix
         if message.content.startswith(f"<@!{self._bot.user.id}>"):
-            await message.channel.send(f":eyes: My prefix here is `!`", delete_after=10)
-
-        # update msg cache
-        if await is_staff(message):
-            self._bot.loop.run_in_executor(None, dump_cache, self._bot, message, True)
-        else:
-            self._bot.loop.run_in_executor(None, dump_cache, self._bot, message)
+            await message.channel.send(f":eyes: My prefix here is {self._bot.prefix}", delete_after=10)
 
 
 def setup(bot):
