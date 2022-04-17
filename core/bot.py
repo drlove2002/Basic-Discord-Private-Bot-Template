@@ -1,25 +1,25 @@
-__version__ = '0.0.0'
+__version__ = '0.1.0'
 
 # Standard libraries
 import os
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional
 
 # Third party libraries
 import aiohttp
 from nextcord import (
     __version__ as dpy_v,
     Status, Activity, ActivityType,
-    Embed, Color, Member, Intents, Guild, Webhook
+    Embed, Color, Member, Intents, Guild
 )
 from nextcord.ext.commands import Bot, when_mentioned_or
 import motor.motor_asyncio
 from dotenv import load_dotenv
 
 # Local code
-from utils.keep_alive import webserver
+# from utils.keep_alive import webserver
 from utils.logging import Log
-from utils.json import read_json, json_unset, write_json
+from utils.json import read_json, json_unset
 from utils.mongo import Document
 from utils import logging
 # from .views import add_views
@@ -32,15 +32,10 @@ logger.info(f"{ROOT_DIR}\n-----")
 __all__ = ["BaseMainBot", "MainBot"]
 
 
-async def get_prefix(client, message):
-    prefixes = ["!"]
-    return when_mentioned_or(*prefixes)(client, message)
-
-
 class BaseMainBot(Bot):
     def __init__(self):
         super().__init__(
-            command_prefix=get_prefix,
+            command_prefix=self.get_prefix,
             case_insensitive=True,
             owner_id=506498413857341440,
             intents=Intents.all(),
@@ -57,7 +52,6 @@ class BaseMainBot(Bot):
 
         self.__mongo = motor.motor_asyncio.AsyncIOMotorClient(str(os.getenv("mongo")))
         self._mongo_setup()
-        self._init_json()
 
     def _mongo_setup(self):
         """MongoDB setup"""
@@ -88,21 +82,24 @@ class BaseMainBot(Bot):
 
     async def on_ready(self):
         # On ready, print some details to standard out
-        webserver()
-        self.guild = self.get_guild(GUILD.MAIN)
+        # webserver()
+        self.guild = self.get_guild(int(os.getenv("GUILD")))
+        await self._init_cache()
         self.startup()
 
-        if self.cache:
-            if restart_msg := self.cache["config"].get('restart_msg', False):
-                channel = self.guild.get_channel(CHANNEL.DEV)
-                msg = await channel.fetch_message(restart_msg)
-                await msg.edit(embed=Embed(
-                    color=Color.brand_green(),
-                    description="***<a:verify_white:859557747648364544>Restarted!***"
-                ))
-                json_unset(['restart_msg'], "config")
-            for cache in ["staff_cache", "msg_cache"]:
-                write_json({}, cache)
+        # load restart configs from locan json
+        restart_data = read_json("config")
+        if "restart_msg" in restart_data:
+            msg = await self.guild.get_channel(
+                restart_data['restart_channel']
+            ).fetch_message(restart_data['restart_msg'])
+
+            await msg.edit(embed=Embed(
+                color=Color.green(),
+                description="***<a:verify_white:859557747648364544>Restarted!***"
+            ))
+            json_unset(['restart_msg', 'restart_channel'], "config")
+
         logger.line()
         logger.info(f"Logged in as: {self.user.name} : {self.user.id}")
 
@@ -116,10 +113,10 @@ class BaseMainBot(Bot):
 
     @property
     def prefix(self) -> str:
-        return "rr"
+        return "!"
 
     async def get_prefix(self, message=None):
-        prefixes = ["rr"]
+        prefixes = ["!"]
         if self.test:
             prefixes.append("$")
         return when_mentioned_or(*prefixes)(self, message)

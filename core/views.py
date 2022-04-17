@@ -1,4 +1,4 @@
-from typing import Union, List, Optional, TYPE_CHECKING
+from typing import Union, List, Optional
 
 from nextcord import ui, PartialEmoji, Emoji, Message, Interaction, ButtonStyle
 from nextcord.ext.commands import Context
@@ -6,8 +6,8 @@ from nextcord.ext.commands import Context
 from .constants import EMOJI
 from utils.util import Raise
 
-if TYPE_CHECKING:
-    from .bot import MainBot
+# if TYPE_CHECKING:
+#     from .bot import MainBot
 
 
 class SingleLink(ui.View):
@@ -53,6 +53,6 @@ class YesNo(ui.View):
         self.value = False
         self.stop()
 
-
-def add_views(bot: 'MainBot'):
-    pass
+# # Persistent view objects add here
+# def add_views(bot: 'MainBot'):
+#     pass
