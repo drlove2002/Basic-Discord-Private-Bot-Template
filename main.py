@@ -7,7 +7,6 @@ from nextcord import DiscordException, Status, Activity, ActivityType, Embed, Co
 from nextcord.ext.commands import check
 
 from core.bot import BaseMainBot
-from core.constants import EMOJI
 from utils.checks import is_manager
 from utils.json import json_upsert
 
@@ -30,7 +29,7 @@ async def _restart(ctx):
     )
     msg = await ctx.send(embed=Embed(
         color=Color.brand_red(),
-        description=f"***{EMOJI.loading}Restarting...***"
+        description=f"***🔄 Restarting...***"
     ))
     json_upsert({"restart_msg": msg.id}, "config")
     bot.loop.run_in_executor(None, functools.partial(os.system, "python3 restart.py " + str(ctx.channel.id)))
