@@ -3,7 +3,7 @@ from textwrap import dedent
 from nextcord.ext.commands import (
     CommandOnCooldown, MissingPermissions, NSFWChannelRequired,
     UserInputError, CommandNotFound, BotMissingPermissions, BadArgument,
-    MissingRequiredArgument,
+    MissingRequiredArgument, MaxConcurrencyReached,
     Context, Cog, MemberNotFound
 )
 from nextcord import Member
@@ -32,35 +32,39 @@ class Events(Cog):
         if isinstance(error, CommandNotFound):  # Ignore these errors
             return
         elif isinstance(error, (UserInputError, BadArgument, MissingRequiredArgument, MemberNotFound)):
-            await Raise(ctx, str(error)).info()
+            await Raise(ctx, f"{error} `{ctx.prefix}{ctx.command.name} {ctx.command.usage or ''}`").info()
         elif isinstance(error, NSFWChannelRequired):
-            await ctx.reply("This is not a NSFW channel!")
+            await ctx.send("This is not a NSFW channel!")
         elif isinstance(error, MissingPermissions):
             missing_perms = ", ".join(error.missing_permissions)
             await Raise(ctx, f"You are missing: `{missing_perms}` to run this command").info()
+        elif isinstance(error, MaxConcurrencyReached):
+            await Raise(ctx, dedent(f"Someone is already using {ctx.command.name} command!\
+             wait until they finish")).info()
         elif isinstance(error, CommandOnCooldown):
             # If the command is currently on cooldown trip this
             m, s = divmod(error.retry_after, 60)
             h, m = divmod(m, 60)
             if int(h) == 0 and int(m) == 0:
-                await Raise(ctx, f"You must wait `{s:.2f}` seconds to use this command!").info()
+                await Raise(ctx, f"You must wait `{round(s, 2) if s < 1 else int(s)}` "
+                                 f"seconds to use this command!").info()
             elif int(h) == 0 and int(m) != 0:
                 await Raise(ctx, dedent(f"You must wait `{int(m)}` minutes\
-                 and `{int(s)}` seconds to use this command!")).info()
+                     and `{int(s)}` seconds to use this command!")).info()
             else:
                 await Raise(ctx, dedent(f"You must wait `{int(h)}` hours,\
-                 `{int(m)}` minutes and `{int(s)}` seconds to use this command!")).info()
+                     `{int(m)}` minutes and `{int(s)}` seconds to use this command!")).info()
 
         # Implement further custom checks for errors here...
         try:
-            await self._bot.send_webhook_log(f"{ctx.channel.mention} {ctx.author} \n {error}")
+            await self._bot.log.send(f"{ctx.channel.mention} {ctx.author} \n {error}")
         except TypeError:
             pass
         raise error
 
     @Cog.listener()
     async def on_error(self, event, *args, **kwargs):
-        await self._bot.send_webhook_log(f"event: {event} \n error: \n{args} \n{kwargs}")
+        await self._bot.log.send(f"event: {event} \n error: \n{args} \n{kwargs}")
 
     @Cog.listener()
     async def on_message(self, message):
