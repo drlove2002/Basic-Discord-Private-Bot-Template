@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "basic discord priveate bot template"
+version = "0.1.0"
+description = ""
+authors = ["Sudip Roy <sudiproy20yo@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+nextcord = {path = "../nextcord"}
+python-dotenv = "^0.20.0"
+colorama = "^0.4.4"
+
+[tool.poetry.dev-dependencies]
+motor = "^2.5.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
