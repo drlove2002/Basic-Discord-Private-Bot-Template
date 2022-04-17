@@ -124,15 +124,6 @@ class BaseMainBot(Bot):
             prefixes.append("$")
         return when_mentioned_or(*prefixes)(self, message)
 
-    @property
-    def token(self) -> str:
-        token = os.getenv("token")
-        return token
-
-    async def send_webhook_log(self, msg: str):
-        await self.log_webhook.send(
-            embed=Embed(color=Color.brand_red(), description=msg), username=self.user.display_name)
-
 
 class MainBot(BaseMainBot):
     """

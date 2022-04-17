@@ -41,4 +41,4 @@ async def _restart(ctx):
 if __name__ == "__main__":
     # When running this file, if it is the 'main' file
     # I.E its not being imported from another python file run this
-    bot.run(bot.token)
+    bot.run(os.getenv("TOKEN"))
