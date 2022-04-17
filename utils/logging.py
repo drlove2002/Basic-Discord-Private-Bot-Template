@@ -1,7 +1,37 @@
 import logging
 import sys
-
+from typing import TYPE_CHECKING, Optional
+from nextcord.utils import find
+from nextcord import Embed, ClientException, Color
 from colorama import Fore, Style
+
+if TYPE_CHECKING:
+    from core.bot import BaseMainBot
+    from nextcord import Webhook
+
+
+class Log:
+    def __init__(self, bot: "BaseMainBot"):
+        self._bot = bot
+        self.__webhook: Optional["Webhook"] = None
+
+    async def sync(self, _id: int) -> "Webhook":
+        channel = self._bot.guild.get_channel(_id)
+        self.__webhook = find(lambda wh: wh.user.id == self._bot.user.id, (await channel.webhooks()))
+        if self.__webhook is None:
+            self.__webhook = await channel.create_webhook(
+                name=self._bot.user.display_name,
+                avatar=self._bot.user.display_avatar,
+            )
+        return self.__webhook
+
+    async def send(self, message: str):
+        if self.__webhook is None:
+            raise ClientException("Try to run Log.sync(log_channel_id) first")
+        await self.__webhook.send(embed=Embed(
+            color=Color.brand_red(),
+            description=message[:2000]
+        ))
 
 
 class BotLogger(logging.Logger,):

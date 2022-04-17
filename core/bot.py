@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 
 # Local code
 from utils.keep_alive import webserver
-from .constants import GUILD, CHANNEL
+from utils.logging import Log
 from utils.json import read_json, json_unset, write_json
 from utils.mongo import Document
 from utils import logging
@@ -53,7 +53,7 @@ class BaseMainBot(Bot):
         self.test: bool = False  # True: will disable few events trigger, for easier testing
         # Webhook session
         self.session = aiohttp.ClientSession(trust_env=True)
-        self.log_webhook = Webhook.from_url(os.getenv("logging"), session=self.session)
+        self.log = Log(self)
 
         self.__mongo = motor.motor_asyncio.AsyncIOMotorClient(str(os.getenv("mongo")))
         self._mongo_setup()
@@ -66,9 +66,9 @@ class BaseMainBot(Bot):
         self.collection = Document(self.db, "collection")  # Type your collection name here
         logger.info("Initialized Database")
 
-    def _init_json(self):
+    async def _init_cache(self):
         """Initialize Cache"""
-        self.cache: Dict[str, Dict[str, Any]] = {"config": read_json("config")}
+        await self.log.sync(int(os.getenv("LOGGING")))
         logger.info("Initialized Cache")
 
     def startup(self):
